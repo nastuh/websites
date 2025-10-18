@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron Music Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --dark-color: #2d3436;
+            --light-color: #f5f6fa;
+            --success-color: #00b894;
+            --danger-color: #d63031;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Сайдбар */
+        .sidebar {
+            width: 250px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            color: var(--light-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary-color);
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Основное содержимое */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+        
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--light-color);
+            margin-left: 10px;
+            width: 100%;
+            outline: none;
+        }
+        
+        /* Плейлист */
+        .playlist {
+            flex: 1;
+        }
+        
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .song-list {
+            list-style: none;
+        }
+        
+        .song-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+        
+        .song-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .song-item.active {
+            background-color: var(--primary-color);
+        }
+        
+        .song-item .cover {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+        
+        .song-info {
+            flex: 1;
+        }
+        
+        .song-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .song-artist {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .song-duration {
+            margin: 0 15px;
+        }
+        
+        .song-actions {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .song-item:hover .song-actions {
+            opacity: 1;
+        }
+        
+        /* Плеер */
+        .player {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--light-color);
+            font-size: 1.2rem;
+            margin: 0 10px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-btn.play-pause {
+            background-color: var(--primary-color);
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+        }
+        
+        .control-btn.play-pause:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .time {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            width: 50px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            width: 0%;
+            position: relative;
+        }
+        
+        .progress::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            background-color: var(--light-color);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .progress-bar:hover .progress::after {
+            opacity: 1;
+        }
+        
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--dark-color);
+            padding: 20px;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--light-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--light-color);
+            outline: none;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--light-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 10px;
+            }
+            
+            .search-bar {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Сайдбар -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Music Player</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" id="tab-library"><i class="fas fa-music"></i> Моя музыка</a></li>
+                <li><a href="#" id="tab-playlists"><i class="fas fa-list"></i> Плейлисты</a></li>
+                <li><a href="#" id="tab-download"><i class="fas fa-download"></i> Скачать</a></li>
+                <li><a href="#" id="tab-settings"><i class="fas fa-cog"></i> Настройки</a></li>
+            </ul>
+        </div>
+        
+        <!-- Основное содержимое -->
+        <div class="main-content">
+            <div class="header">
+                <h2 id="current-tab-title">Моя музыка</h2>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Поиск..." id="search-input">
+                </div>
+            </div>
+            
+            <!-- Вкладки -->
+            <div class="tabs">
+                <div class="tab active" data-tab="library">Библиотека</div>
+                <div class="tab" data-tab="recent">Недавние</div>
+                <div class="tab" data-tab="favorites">Избранное</div>
+            </div>
+            
+            <!-- Содержимое вкладок -->
+            <div class="tab-content active" id="library-content">
+                <div class="playlist-header">
+                    <h3>Все треки</h3>
+                    <button class="btn btn-primary" id="add-song-btn">
+                        <i class="fas fa-plus"></i> Добавить трек
+                    </button>
+                </div>
+                <ul class="song-list" id="song-list">
+                    <!-- Треки будут добавляться сюда через JavaScript -->
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="recent-content">
+                <h3>Недавно проигранные</h3>
+                <ul class="song-list" id="recent-list">
+                    <!-- Недавние треки будут добавляться сюда -->
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="favorites-content">
+                <h3>Избранное</h3>
+                <ul class="song-list" id="favorites-list">
+                    <!-- Избранные треки будут добавляться сюда -->
+                </ul>
+            </div>
+            
+            <!-- Контент для скачивания -->
+            <div class="tab-content" id="download-content" style="display: none;">
+                <h3>Скачать музыку</h3>
+                <div class="form-group">
+                    <label for="youtube-url">Ссылка на YouTube</label>
+                    <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="download-btn">
+                        <i class="fas fa-download"></i> Скачать
+                    </button>
+                </div>
+                <div id="download-progress" style="margin-top: 20px; display: none;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span id="download-status">Скачивание...</span>
+                        <span id="download-percentage">0%</span>
+                    </div>
+                    <div style="height: 5px; background-color: rgba(255,255,255,0.1); border-radius: 5px;">
+                        <div id="download-progress-bar" style="height: 100%; width: 0%; background-color: var(--primary-color); border-radius: 5px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Контент для настроек -->
+            <div class="tab-content" id="settings-content" style="display: none;">
+                <h3>Настройки</h3>
+                <div class="form-group">
+                    <label for="theme-select">Тема</label>
+                    <select id="theme-select">
+                        <option value="dark">Темная</option>
+                        <option value="light">Светлая</option>
+                        <option value="purple">Фиолетовая</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="download-folder">Папка для загрузок</label>
+                    <div style="display: flex;">
+                        <input type="text" id="download-folder" readonly style="flex: 1;">
+                        <button class="btn btn-secondary" id="browse-folder-btn" style="margin-left: 10px;">
+                            <i class="fas fa-folder-open"></i> Обзор
+                        </button>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="save-settings-btn">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Нижний плеер -->
+    <div class="player">
+        <div class="player-info" style="display: flex; align-items: center; margin-bottom: 10px;">
+            <img src="" alt="Cover" id="now-playing-cover" style="width: 50px; height: 50px; border-radius: 5px; margin-right: 15px;">
+            <div>
+                <div id="now-playing-title">Не выбрано</div>
+                <div id="now-playing-artist" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">—</div>
+            </div>
+        </div>
+        <div class="player-controls">
+            <button class="control-btn" id="prev-btn" title="Предыдущий">
+                <i class="fas fa-step-backward"></i>
+            </button>
+            <button class="control-btn" id="rewind-btn" title="Назад на 10 сек">
+                <i class="fas fa-backward"></i>
+            </button>
+            <button class="control-btn play-pause" id="play-btn" title="Воспроизвести">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="control-btn" id="forward-btn" title="Вперед на 10 сек">
+                <i class="fas fa-forward"></i>
+            </button>
+            <button class="control-btn" id="next-btn" title="Следующий">
+                <i class="fas fa-step-forward"></i>
+            </button>
+        </div>
+        <div class="progress-container">
+            <span class="time" id="current-time">0:00</span>
+            <div class="progress-bar" id="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <span class="time" id="duration">0:00</span>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+            <button class="control-btn" id="volume-btn" title="Громкость">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.7" style="width: 100px; margin-left: 10px;">
+            <button class="control-btn" id="repeat-btn" title="Повтор">
+                <i class="fas fa-redo"></i>
+            </button>
+            <button class="control-btn" id="shuffle-btn" title="Перемешать">
+                <i class="fas fa-random"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для добавления трека -->
+    <div class="modal" id="add-song-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Добавить трек</div>
+                <button class="close-modal" id="close-add-song-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="song-file">Файл музыки</label>
+                <input type="file" id="song-file" accept="audio/*">
+            </div>
+            <div class="form-group">
+                <label for="song-title">Название</label>
+                <input type="text" id="song-title" placeholder="Название трека">
+            </div>
+            <div class="form-group">
+                <label for="song-artist">Исполнитель</label>
+                <input type="text" id="song-artist" placeholder="Исполнитель">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" id="cancel-add-song">Отмена</button>
+                <button class="btn btn-primary" id="save-song">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Здесь будет основной JavaScript код
+        document.addEventListener('DOMContentLoaded', () => {
+            // Инициализация плеера
+            console.log('Player initialized');
+            
+            // Временные данные для демонстрации
+            const demoData = [
+                {
+                    id: 1,
+                    title: "Sample Song 1",
+                    artist: "Artist 1",
+                    duration: "3:45",
+                    cover: "https://via.placeholder.com/50",
+                    file: ""
+                },
+                {
+                    id: 2,
+                    title: "Sample Song 2",
+                    artist: "Artist 2",
+                    duration: "4:20",
+                    cover: "https://via.placeholder.com/50",
+                    file: ""
+                }
+            ];
+            
+            // Заполнение списка треков
+            const songList = document.getElementById('song-list');
+            demoData.forEach(song => {
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                li.dataset.id = song.id;
+                li.innerHTML = `
+                    <img src="${song.cover}" alt="Cover" class="cover">
+                    <div class="song-info">
+                        <div class="song-title">${song.title}</div>
+                        <div class="song-artist">${song.artist}</div>
+                    </div>
+                    <div class="song-duration">${song.duration}</div>
+                    <div class="song-actions">
+                        <button class="control-btn" title="Добавить в избранное"><i class="far fa-heart"></i></button>
+                        <button class="control-btn" title="Удалить"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                songList.appendChild(li);
+            });
+            
+            // Переключение вкладок в сайдбаре
+            document.querySelectorAll('.sidebar-menu a').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Удаляем активный класс у всех вкладок
+                    document.querySelectorAll('.sidebar-menu a').forEach(t => t.classList.remove('active'));
+                    
+                    // Добавляем активный класс к текущей вкладке
+                    tab.classList.add('active');
+                    
+                    // Обновляем заголовок
+                    document.getElementById('current-tab-title').textContent = tab.textContent;
+                    
+                    // Показываем соответствующий контент
+                    const tabId = tab.id.replace('tab-', '');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    document.getElementById(`${tabId}-content`).style.display = 'block';
+                });
+            });
+            
+            // Переключение внутренних вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Удаляем активный класс у всех вкладок
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    
+                    // Добавляем активный класс к текущей вкладке
+                    tab.classList.add('active');
+                    
+                    // Показываем соответствующий контент
+                    const tabName = tab.dataset.tab;
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tabName}-content`).classList.add('active');
+                });
+            });
+            
+            // Открытие модального окна для добавления трека
+            document.getElementById('add-song-btn').addEventListener('click', () => {
+                document.getElementById('add-song-modal').style.display = 'flex';
+            });
+            
+            // Закрытие модального окна
+            document.getElementById('close-add-song-modal').addEventListener('click', () => {
+                document.getElementById('add-song-modal').style.display = 'none';
+            });
+            
+            document.getElementById('cancel-add-song').addEventListener('click', () => {
+                document.getElementById('add-song-modal').style.display = 'none';
+            });
+            
+            // Сохранение трека
+            document.getElementById('save-song').addEventListener('click', () => {
+                const title = document.getElementById('song-title').value;
+                const artist = document.getElementById('song-artist').value;
+                const fileInput = document.getElementById('song-file');
+                
+                if (fileInput.files.length === 0) {
+                    alert('Пожалуйста, выберите файл');
+                    return;
+                }
+                
+                if (!title) {
+                    alert('Пожалуйста, введите название трека');
+                    return;
+                }
+                
+                // Здесь должна быть логика сохранения трека
+                console.log('Сохранение трека:', {
+                    title,
+                    artist,
+                    file: fileInput.files[0]
+                });
+                
+                // Закрываем модальное окно
+                document.getElementById('add-song-modal').style.display = 'none';
+                
+                // Очищаем поля
+                document.getElementById('song-title').value = '';
+                document.getElementById('song-artist').value = '';
+                document.getElementById('song-file').value = '';
+            });
+            
+            // Кнопки управления плеером
+            document.getElementById('play-btn').addEventListener('click', () => {
+                const btn = document.getElementById('play-btn');
+                if (btn.innerHTML.includes('play')) {
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    // Здесь должна быть логика воспроизведения
+                } else {
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                    // Здесь должна быть логика паузы
+                }
+            });
+            
+            // Скачивание с YouTube
+            document.getElementById('download-btn').addEventListener('click', async () => {
+                const url = document.getElementById('youtube-url').value;
+                if (!url) {
+                    alert('Пожалуйста, введите ссылку на YouTube');
+                    return;
+                }
+                
+                // Показываем прогресс
+                const progress = document.getElementById('download-progress');
+                progress.style.display = 'block';
+                document.getElementById('download-status').textContent = 'Скачивание...';
+                document.getElementById('download-percentage').textContent = '0%';
+                document.getElementById('download-progress-bar').style.width = '0%';
+                
+                // Здесь должна быть логика скачивания с YouTube
+                // Это только демонстрация прогресса
+                let progressValue = 0;
+                const interval = setInterval(() => {
+                    progressValue += 5;
+                    document.getElementById('download-percentage').textContent = `${progressValue}%`;
+                    document.getElementById('download-progress-bar').style.width = `${progressValue}%`;
+                    
+                    if (progressValue >= 100) {
+                        clearInterval(interval);
+                        document.getElementById('download-status').textContent = 'Завершено';
+                        // Здесь можно добавить трек в библиотеку
+                    }
+                }, 300);
+            });
+            
+            // Выбор папки для загрузок
+            document.getElementById('browse-folder-btn').addEventListener('click', async () => {
+                // В Electron используем dialog.showOpenDialog
+                if (window.electron) {
+                    const result = await window.electron.showOpenDialog({
+                        properties: ['openDirectory']
+                    });
+                    
+                    if (!result.canceled && result.filePaths.length > 0) {
+                        document.getElementById('download-folder').value = result.filePaths[0];
+                    }
+                } else {
+                    // Для демонстрации в браузере
+                    document.getElementById('download-folder').value = 'C:/Music/Downloads';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

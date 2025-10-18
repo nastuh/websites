@@ -1,0 +1,36 @@
+{
+    "name": "electron-music-player",
+    "version": "1.0.0",
+    "description": "Music player with YouTube downloader",
+    "main": "main.js",
+    "scripts": {
+      "start": "electron .",
+      "build": "electron-builder"
+    },
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {
+      "electron": "^latest",
+      "electron-builder": "^latest"
+    },
+    "dependencies": {
+      "fluent-ffmpeg": "^2.1.2",
+      "ffmpeg-static": "^5.0.0",
+      "ytdl-core": "^4.11.0"
+    },
+    "build": {
+      "appId": "com.example.musicplayer",
+      "win": {
+        "target": "nsis",
+        "icon": "assets/icon.ico"
+      },
+      "mac": {
+        "target": "dmg",
+        "icon": "assets/icon.icns"
+      },
+      "linux": {
+        "target": "AppImage",
+        "icon": "assets/icon.png"
+      }
+    }
+  }
