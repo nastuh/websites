@@ -1,0 +1,11 @@
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.map-container {
+    background-image: url('https://avatars.mds.yandex.net/i?id=99e5fb35f235bb9dc5ed8125936c202e060a0aad-4727286-images-thumbs&n=13');
+    background-size: cover;
+    background-position: center;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

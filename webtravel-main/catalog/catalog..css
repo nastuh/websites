@@ -1,0 +1,11 @@
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.search-input::-webkit-search-cancel-button { display: none; }
+.price-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #4F46E5;
+    border-radius: 50%;
+    cursor: pointer;
+}
